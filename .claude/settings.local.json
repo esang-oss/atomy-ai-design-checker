@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://heavy-crabs-scream.loca.lt/health)",
+      "Read(//private/tmp/**)"
+    ]
+  }
+}

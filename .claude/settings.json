@@ -1,0 +1,69 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"feedback\\\": \\\"📋 [PRE-WRITE] 체크: (1) docs/checklist.md의 현재 Phase와 일치하는 작업인가? (2) 이 파일이 현재 세션의 단일 도메인 범위 안인가?\\\"}\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"feedback\\\": \\\"🔒 [PRE-BASH] 보안 체크: (1) .env / API 키가 명령어에 포함되어 있지 않은가? (2) rm -rf / DROP TABLE 같은 파괴적 명령어가 아닌가? (3) 외부 네트워크 전송 명령어가 아닌가?\\\"}\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"feedback\\\": \\\"👁️ [PRE-READ] .env / secrets / *.key 파일을 읽으려는 경우 반드시 사용자에게 확인 후 진행하세요.\\\"}\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"feedback\\\": \\\"✅ [POST-WRITE] 완료 체크: (1) 에러 처리(try-catch) 누락은 없는가? (2) API 키 하드코딩은 없는가? (3) docs/context.md에 이 변경사항을 기록해야 하는가? (4) .claude/memory/ 파일을 수정했다면: frontmatter 필수 필드 누락은 없는가? _index.md 업데이트가 필요한가? (5) archive/ 내 파일을 수정했다면: _archive_index.md 업데이트가 필요한가?\\\"}\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"feedback\\\": \\\"📊 [POST-BASH] 실행 결과 확인: 에러 메시지가 있다면 즉시 사용자에게 보고하고 수정 계획을 제시하세요.\\\"}\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"feedback\\\": \\\"🏁 [SESSION-END] 세션 종료 전 필수 체크: (1) Verification Gate — 테스트/빌드/실행 결과(증거)를 보고에 포함했는가? 증거 없는 '완료'는 금지. (2) docs/checklist.md 완료 항목 체크 (3) docs/context.md 변경사항·의사결정 기록 (4) recurring-mistakes.md — 이번 세션에 버그/테스트·린트 실패 있었다면 1행 추가 (5) .claude/memory/ 메모리 저장 대상 확인 → /handoff 실행 (6) CLAUDE.md 에 compliance: required 있으면 /handoff STEP 2.6 Compliance Audit 통과 필수 (7) 최종적으로 /clear 안내\\\"}\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+# W4 fallback brainstorm engine Phase A — yaml 기반 룰 인터뷰 정책
+#
+# rpi.md Step 2-D 의 D-1~D-7 룰을 yaml 로 추출. BrainstormEngine 이 본 yaml
+# 로드 후 시퀀스 진행. LLM 호출 0 (Phase A 정의).
+#
+# 생성: 2026-05-04 (W4 Phase A Task 1, AC-1).
+
+version: 1
+
+entry_framings:
+  plan_mismatch: |
+    원래 계획은 "{plan_next_task}" 인데, "{user_query}" 를 말씀하셨네요.
+    먼저 의도를 정리해볼게요. 몇 가지 여쭤볼게요.
+  new_feature: |
+    신규 기능이네요. 바로 구현하기 전에 몇 가지 정리해볼게요.
+
+questions:
+  - id: Q-purpose
+    title: "한 줄 목적"
+    body: "이 기능의 한 줄 목적이 뭔가요? (누구에게 어떤 가치를 주나요?)"
+    type: open
+    target_section: problem_statement
+
+  - id: Q-users
+    title: "주 사용자 / 시나리오"
+    body: "누가 이 기능을 어떤 상황에서 쓰나요? 가장 핵심 사용자 스토리 2-3 개."
+    type: open
+    target_section: user_stories
+
+  - id: Q-scope
+    title: "범위"
+    body: "이번 spec 의 범위는 어디까지?"
+    type: choice
+    options:
+      - id: minimal
+        label: "최소 viable — 핵심 기능만"
+      - id: full
+        label: "Full — 모든 분기 + 엣지 케이스"
+      - id: phased
+        label: "Phase 분리 — 본 spec 은 Phase A 만"
+    target_section: approaches
+
+  - id: Q-io
+    title: "입출력"
+    body: "이 기능의 입력 / 출력 / 환경변수 / 외부 API 의존을 한 줄씩 정리해주세요."
+    type: open
+    target_section: io_contract
+
+  - id: Q-edge
+    title: "엣지 케이스"
+    body: "실패 / 부분 진행 / 권한 부족 / 네트워크 단절 등 엣지 케이스 처리 방향?"
+    type: open
+    target_section: edge_cases
+
+  - id: Q-ac
+    title: "수용 기준 (AC)"
+    body: "이 기능 완료의 객관적 검증 방법은? AC 3-5 개 (테스트 가능 형태)."
+    type: open
+    target_section: acceptance_criteria
+
+  - id: Q-non-goals
+    title: "범위 외"
+    body: "이 spec 에 포함하지 않을 항목 / 후속 spec 으로 미룰 항목?"
+    type: open
+    target_section: non_goals
+
+scope_explosion_keywords:
+  - "X 도 Y 도 Z 도"
+  - "전부 다"
+  - "모두 다"
+  - "다 같이"
+
+scope_explosion_response: |
+  ⚠️  이 기능 하나에 여러 독립 영역이 들어가네요. 각자 독립적이라
+  한 spec 에 묶으면 작업 분해가 흐려집니다.
+    (A) 지금은 첫 번째 만 진행, 나머지는 별도 spec 으로 분리
+    (B) 셋 다 강하게 연결 — 이유 알려주세요
+
+skip_commands:
+  - "skip brainstorm"
+  - "skip"
+  - "건너뛰어"
+  - "건너뜀"
+
+skip_response: |
+  Spec 간략본 저장하고 Plan 모드로 넘어갑니다. (Phase A 한계: 답변된 질문만 spec 에 박힘)
+
+spec_sections:
+  - problem_statement
+  - user_stories
+  - approaches
+  - io_contract
+  - non_functional
+  - edge_cases
+  - acceptance_criteria
+  - non_goals

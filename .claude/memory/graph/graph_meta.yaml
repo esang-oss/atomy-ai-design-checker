@@ -1,0 +1,12 @@
+version: "2.0.0"
+namespace:
+  org: "Atomy"
+  dept: "Design"
+  user: "esang"
+  project: "atomy-ai-design-checker"
+settings:
+  auto_link_glossary: true
+  max_graph_nodes: 500
+  orphan_warning: true
+harness:
+  registered_at: "2026-06-11"
