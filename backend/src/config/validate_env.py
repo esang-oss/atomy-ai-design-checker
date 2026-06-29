@@ -3,7 +3,7 @@ import os
 import sys
 
 REQUIRED_VARS: list[tuple[str, str]] = [
-    ("ANTHROPIC_API_KEY", "Claude Vision API 키"),
+    ("GEMINI_API_KEY", "Gemini Vision API 키"),
 ]
 
 OPTIONAL_VARS_WITH_DEFAULT: list[tuple[str, str, str]] = [

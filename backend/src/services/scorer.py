@@ -1,12 +1,12 @@
-"""Claude Vision API를 이용한 디자인 채점 서비스."""
+"""Gemini Vision API를 이용한 디자인 채점 서비스."""
 import asyncio
-import base64
 import io
 import json
 import os
 import time
 
-import anthropic
+from google import genai
+from google.genai import types
 from PIL import Image
 
 from src.config.constants import ANALYSIS_TIMEOUT_SEC, MAX_ANALYSIS_RETRIES
@@ -322,56 +322,29 @@ def _build_prompt(
     )
 
 
-def _call_claude_sync(image_bytes: bytes, content_type: str, prompt: str) -> dict:
-    """Claude Vision API 동기 호출 — MAX_ANALYSIS_RETRIES 재시도 포함."""
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    model_name = os.environ.get("CLAUDE_MODEL", "claude-opus-4-8")
+def _call_gemini_sync(image_bytes: bytes, content_type: str, prompt: str) -> dict:
+    """Gemini Vision API 동기 호출 — MAX_ANALYSIS_RETRIES 재시도 포함."""
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    model_name = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
     last_error: Exception = RuntimeError("알 수 없는 오류")
     # image/jpg 는 표준 MIME 타입이 아니므로 정규화
     mime = "image/jpeg" if content_type == "image/jpg" else content_type
 
-    is_pdf = content_type == "application/pdf"
-
-    if is_pdf:
-        content_block = {
-            "type": "document",
-            "source": {
-                "type": "base64",
-                "media_type": "application/pdf",
-                "data": base64.standard_b64encode(image_bytes).decode("utf-8"),
-            },
-        }
-    else:
-        content_block = {
-            "type": "image",
-            "source": {
-                "type": "base64",
-                "media_type": mime,
-                "data": base64.standard_b64encode(image_bytes).decode("utf-8"),
-            },
-        }
-
     for attempt in range(MAX_ANALYSIS_RETRIES):
         try:
-            response = client.messages.create(
+            response = client.models.generate_content(
                 model=model_name,
-                max_tokens=4096,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            content_block,
-                            {"type": "text", "text": prompt},
-                        ],
-                    }
+                contents=[
+                    types.Part.from_bytes(data=image_bytes, mime_type=mime),
+                    prompt,
                 ],
             )
-            return _parse_json_response(response.content[0].text)
+            return _parse_json_response(response.text)
         except Exception as e:
             last_error = e
             if attempt < MAX_ANALYSIS_RETRIES - 1:
-                is_overload = "529" in str(e) or "overloaded" in str(e).lower()
-                # 과부하: 지수 백오프 (10s → 20s → 40s → 60s)
+                is_overload = "503" in str(e) or "UNAVAILABLE" in str(e)
+                # 503 과부하: 지수 백오프 (10s → 20s → 40s → 60s)
                 wait = min(10.0 * (2 ** attempt), 60.0) if is_overload else 2.0
                 time.sleep(wait)
 
@@ -379,7 +352,7 @@ def _call_claude_sync(image_bytes: bytes, content_type: str, prompt: str) -> dic
 
 
 def _parse_json_response(raw: str) -> dict:
-    """Claude 응답 텍스트에서 JSON을 파싱한다."""
+    """Gemini 응답 텍스트에서 JSON을 파싱한다."""
     text = raw.strip()
     if text.startswith("```"):
         text = text.split("```")[1]
@@ -449,5 +422,5 @@ async def score_design(
 ) -> dict:
     """패키지 디자인 이미지·PDF를 채점하고 결과를 반환한다."""
     prompt = _build_prompt(category, line_type, product_type, content_type, is_overseas)
-    result = await asyncio.to_thread(_call_claude_sync, image_bytes, content_type, prompt)
+    result = await asyncio.to_thread(_call_gemini_sync, image_bytes, content_type, prompt)
     return _finalize_result(result)
